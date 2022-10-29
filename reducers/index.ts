@@ -16,6 +16,10 @@ const reducerFunc = (state: any, action: any) => {
       return { ...state, passionateAbout: action.payload };
     case "OPENAI_OUTPUT":
       return { ...state, openAIOutput: action.payload };
+    case "TOGGLE_LOADER":
+      return { ...state, loader: !state.loader };
+    case "TOGGLE_OUTPUT":
+      return { ...state, renderResult: !state.renderResult };
     default:
       return state;
   }
@@ -33,6 +37,8 @@ const initFunc = {
   passionateAbout:
     "solving problems at the intersection of technology and social good.",
   openAIOutput: "",
+  loader: false,
+  renderResult: false,
 };
 
 export { reducerFunc, initFunc };
