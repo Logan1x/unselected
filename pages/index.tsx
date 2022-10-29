@@ -1,10 +1,50 @@
 import Head from "next/head";
 import { useReducer } from "react";
 import type { NextPage } from "next";
+import { Configuration, OpenAIApi } from "openai";
 import { reducerFunc, initFunc } from "../reducers";
 
 const Home: NextPage = () => {
   const [state, dispatch] = useReducer(reducerFunc, initFunc);
+
+  const configuration = new Configuration({
+    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    console.log(process.env["NEXT_PUBLIC_TEST_MODE"]);
+
+    dispatch({ type: "OPENAI_OUTPUT", payload: "" });
+
+    const promptString = `Write a cover letter to ${state.emailingTo} from ${state.yourName} for a ${state.roleName} job at ${state.companyName}. I have experience in ${state.experienceIn} I am excited about the job because ${state.excitedAboutJobBecause} I am passionate about ${state.passionateAbout}`;
+
+    // const op = await openai.createCompletion({
+    //   model: "text-davinci-002",
+    //   prompt: promptString,
+    //   temperature: 0.7,
+    //   max_tokens: 2080,
+    //   top_p: 1,
+    //   frequency_penalty: 0,
+    //   presence_penalty: 0,
+    // });
+
+    const op = {
+      data: {
+        choices: [
+          {
+            text: "This is a test output",
+          },
+        ],
+      },
+    };
+
+    console.log(op);
+
+    dispatch({ type: "OPENAI_OUTPUT", payload: op.data.choices[0].text });
+  };
   return (
     <div className="flex min-h-screen flex-col items-center justify-center py-2">
       <Head>
@@ -23,7 +63,7 @@ const Home: NextPage = () => {
         <p className="mt-3 text-2xl">Let AI write your cover letter </p>
 
         <div className="w-2/5 border border-slate-500 p-2 py-2 mx-2 my-4 rounded">
-          <form>
+          <form onSubmit={handleSubmit}>
             <div className="flex flex-col items-start px-3 py-1 w-full">
               <label htmlFor="" className="text-xs text-gray-400">
                 Company Name
