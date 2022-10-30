@@ -2,6 +2,8 @@
 
 Let AI write your cover letter
 
+website : http://unselected.vercel.app/
+
 ## Inspiration
 
 Cover letter adds brownie points to candidates profile, and when applying for multiple jobs, its very tediuos to write distinct cover letter for each profile. With this motivation, We made a website, which takes very short info about the position you are applying for and writes cover letter for you.
