@@ -1,27 +1,33 @@
-# Next.js + Tailwind CSS Example
+# ~~un~~selected
 
-This example shows how to use [Tailwind CSS](https://tailwindcss.com/) [(v3.0)](https://tailwindcss.com/blog/tailwindcss-v3) with Next.js. It follows the steps outlined in the official [Tailwind docs](https://tailwindcss.com/docs/guides/nextjs).
+Let AI write your cover letter
 
-## Deploy your own
+## Inspiration
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example) or preview live with [StackBlitz](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/with-tailwindcss)
+Cover letter adds brownie points to candidates profile, and when applying for multiple jobs, its very tediuos to write distinct cover letter for each profile. With this motivation, We made a website, which takes very short info about the position you are applying for and writes cover letter for you.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-tailwindcss&project-name=with-tailwindcss&repository-name=with-tailwindcss)
+## What it does
 
-## How to use
+Using OpenAI's GPT-3, it generates cover letter from given prompts.
 
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+## How I built it
 
-```bash
-npx create-next-app --example with-tailwindcss with-tailwindcss-app
-```
+We used NextJS for UI and TailwindCSS for styling.
 
-```bash
-yarn create next-app --example with-tailwindcss with-tailwindcss-app
-```
+## Challenges I ran into
 
-```bash
-pnpm create next-app --example with-tailwindcss with-tailwindcss-app
-```
+- When we started we didn't have a designer in our team, so we made a webpage without thinking design and ran into very bad layout. Later with help of one of the member, we overcome that problem.
+- When we were trying to intregate OpenAI package, we were facing cors issue. later with help of community, we were able to fix it.
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+## What we learned
+
+- How to work in a team project.
+- Working in different time zones.
+- Work with machine learning models.
+
+## What's next for Retricia
+
+- Adding copy to clipboard and download button on results page.
+- Dark mode.
+- Optimize the response time.
+- Taking user feedback and work on it.
