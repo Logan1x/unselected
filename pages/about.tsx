@@ -48,7 +48,7 @@ export default function about() {
         </section>
       </main>
 
-      <footer className="flex h-24 w-full items-center justify-around border-t text-sm lg:text-lg">
+      <footer className="flex h-16 w-full items-center justify-around border-t text-sm lg:text-lg">
         <p>
           <span className="border-b-2 border-gray-700 hover:border-blue-600 hover:border-b-4">
             <a href="/">home</a>
