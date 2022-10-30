@@ -8,8 +8,8 @@ export default function about() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <section className="w-2/4 text-justify">
+      <main className="flex w-full flex-1 flex-col items-center justify-center px-6 lg:px-20 text-center">
+        <section className="w-full lg:w-2/4 text-justify">
           <h1 className="text-4xl text-gray-500 text-center">about</h1>
 
           <p className="mt-3 text-xl text-gray-700">
@@ -48,7 +48,7 @@ export default function about() {
         </section>
       </main>
 
-      <footer className="flex h-24 w-full items-center justify-around border-t">
+      <footer className="flex h-24 w-full items-center justify-around border-t text-sm lg:text-lg">
         <p>
           <span className="border-b-2 border-gray-700 hover:border-blue-600 hover:border-b-4">
             <a href="/">home</a>
