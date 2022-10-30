@@ -16,7 +16,7 @@ Using OpenAI's GPT-3, it generates cover letter from given prompts.
 
 We used NextJS for UI and TailwindCSS for styling.
 
-## Challenges I ran into
+## Challenges we ran into
 
 - When we started we didn't have a designer in our team, so we made a webpage without thinking design and ran into very bad layout. Later with help of one of the member, we overcome that problem.
 - When we were trying to intregate OpenAI package, we were facing cors issue. later with help of community, we were able to fix it.
@@ -27,7 +27,7 @@ We used NextJS for UI and TailwindCSS for styling.
 - Working in different time zones.
 - Work with machine learning models.
 
-## What's next for Retricia
+## What's next for unselected
 
 - Adding copy to clipboard and download button on results page.
 - Dark mode.
