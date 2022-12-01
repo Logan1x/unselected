@@ -16,10 +16,14 @@ const reducerFunc = (state: any, action: any) => {
       return { ...state, passionateAbout: action.payload };
     case "OPENAI_OUTPUT":
       return { ...state, openAIOutput: action.payload };
+    case "OPENAI_OUTPUT_COPY2CLIPBOARD":
+      return { ...state, openAIOutputCopy2Clipboard: action.payload };
     case "TOGGLE_LOADER":
       return { ...state, loader: !state.loader };
     case "TOGGLE_OUTPUT":
       return { ...state, renderResult: !state.renderResult };
+    case "TOGGLE_ERROR":
+      return { ...state, isError: !state.isError };
     default:
       return state;
   }
@@ -37,8 +41,10 @@ const initFunc = {
   passionateAbout:
     "solving problems at the intersection of technology and social good.",
   openAIOutput: "",
+  openAIOutputCopy2Clipboard: "",
   loader: false,
   renderResult: false,
+  isError: false,
 };
 
 export { reducerFunc, initFunc };

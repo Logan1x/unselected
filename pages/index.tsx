@@ -1,11 +1,13 @@
 import Head from "next/head";
-import { useReducer, Fragment } from "react";
+import { useReducer, Fragment, useState } from "react";
 import type { NextPage } from "next";
 import { Configuration, OpenAIApi } from "openai";
 import { reducerFunc, initFunc } from "../reducers";
+import { stat } from "fs";
 
 const Home: NextPage = () => {
   const [state, dispatch] = useReducer(reducerFunc, initFunc);
+  const [btnText, setBtnText] = useState("Copy to Clipboard");
 
   const configuration = new Configuration({
     apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
@@ -20,34 +22,48 @@ const Home: NextPage = () => {
     });
 
     dispatch({ type: "OPENAI_OUTPUT", payload: "" });
+    dispatch({ type: "OPENAI_OUTPUT_COPY2CLIPBOARD", payload: "" });
+    setBtnText("Copy to Clipboard");
 
     const promptString = `Write a cover letter to ${state.emailingTo} from ${state.yourName} for a ${state.roleName} job at ${state.companyName}. I have experience in ${state.experienceIn} I am excited about the job because ${state.excitedAboutJobBecause} I am passionate about ${state.passionateAbout}`;
 
-    const op = await openai.createCompletion({
-      model: "text-davinci-002",
-      prompt: promptString,
-      temperature: 0.7,
-      max_tokens: 2080,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-    });
+    try {
+      const op = await openai.createCompletion({
+        model: "text-davinci-002",
+        prompt: promptString,
+        temperature: 0.7,
+        max_tokens: 2080,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+      });
 
-    const prompt = op.data.choices[0].text
-      ?.split("\n")
-      .map((str, i) => <p key={i}>{str}</p>);
+      const prompt = op.data.choices[0].text
+        ?.split("\n")
+        .map((str, i) => <p key={i}>{str}</p>);
 
-    dispatch({
-      type: "OPENAI_OUTPUT",
-      payload: prompt,
-    });
+      dispatch({
+        type: "OPENAI_OUTPUT_COPY2CLIPBOARD",
+        payload: op.data.choices[0].text,
+      });
 
-    dispatch({
-      type: "TOGGLE_LOADER",
-    });
-    dispatch({
-      type: "TOGGLE_OUTPUT",
-    });
+      dispatch({
+        type: "OPENAI_OUTPUT",
+        payload: prompt,
+      });
+
+      dispatch({
+        type: "TOGGLE_LOADER",
+      });
+      dispatch({
+        type: "TOGGLE_OUTPUT",
+      });
+    } catch (err) {
+      console.log(err);
+      dispatch({
+        type: "TOGGLE_ERROR",
+      });
+    }
   };
 
   return (
@@ -59,7 +75,7 @@ const Home: NextPage = () => {
         </Head>
 
         <main className="flex w-full flex-1 flex-col items-center justify-center px-2 md:px-20 text-center">
-          <h1 className="text-6xl font-medium text-blue-600 flex items-center">
+          <h1 className="text-3xl md:text-5xl font-medium text-blue-600 flex items-center">
             <span className="font-light line-through text-gray-500">un</span>
             <span className="bg-gray-200 p-1 rounded">selected</span>
             <svg
@@ -91,159 +107,178 @@ const Home: NextPage = () => {
             </svg>
           </h1>
 
-          <p className="mt-3 text-2xl">Let AI write your cover letter </p>
+          <p className="mt-3 text-lg md:text-2xl">
+            Let AI write your cover letter{" "}
+          </p>
 
-          {state.loader ? (
-            <div className="mt-6">
-              <p>Loading...(takes 1-2 mins)</p>
-            </div>
+          {!state.isError ? (
+            state.loader ? (
+              <div className="mt-6">
+                <p>Loading...(takes 1-2 mins)</p>
+              </div>
+            ) : (
+              <div className="w-full lg:w-2/4 border border-slate-500 px-2 py-2 mx-2 my-2 rounded">
+                {state.renderResult ? (
+                  <>
+                    <div className="px-4 py-2 mx-2 my-4 rounded text-justify">
+                      {state.openAIOutput.length > 0 ? state.openAIOutput : ""}
+                    </div>
+                    <button
+                      onClick={() =>
+                        dispatch({
+                          type: "TOGGLE_OUTPUT",
+                        })
+                      }
+                      className="border border-blue-700 px-6 py-2 rounded transition ease-in-out delay-100 hover:bg-blue-700 hover:text-white"
+                    >
+                      Start Over
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          state.openAIOutputCopy2Clipboard
+                        );
+                        setBtnText("Copied!");
+                      }}
+                      className="mx-2 border border-blue-700 px-6 py-2 rounded transition ease-in-out delay-100 bg-blue-700 hover:bg-blue-600 text-white"
+                    >
+                      {btnText}
+                    </button>
+                  </>
+                ) : (
+                  <form onSubmit={handleSubmit}>
+                    <div className="flex flex-col items-start px-3 py-1 w-full">
+                      <label htmlFor="" className="text-xs text-gray-400">
+                        Company Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Google"
+                        value={state.companyName}
+                        onChange={(e) => {
+                          dispatch({
+                            type: "COMPANY_NAME",
+                            payload: e.target.value,
+                          });
+                        }}
+                        className="border px-1 py-1 my-1 rounded bg-slate-100 w-full text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start px-3 py-1 w-full">
+                      <label htmlFor="" className="text-xs text-gray-400">
+                        What role you are applying for?
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Machine Learning Engineer"
+                        value={state.roleName}
+                        onChange={(e) => {
+                          dispatch({
+                            type: "ROLE_NAME",
+                            payload: e.target.value,
+                          });
+                        }}
+                        className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start px-3 py-1 w-full">
+                      <label htmlFor="" className="text-xs text-gray-400">
+                        Who are you emailing?
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="John Cena"
+                        value={state.emailingTo}
+                        onChange={(e) => {
+                          dispatch({
+                            type: "EMAILING_TO",
+                            payload: e.target.value,
+                          });
+                        }}
+                        className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start px-3 py-1 w-full">
+                      <label htmlFor="" className="text-xs text-gray-400">
+                        What is your name?
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Khushal Sharma"
+                        value={state.yourName}
+                        onChange={(e) => {
+                          dispatch({
+                            type: "YOUR_NAME",
+                            payload: e.target.value,
+                          });
+                        }}
+                        className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start px-3 py-1 w-full">
+                      <label htmlFor="" className="text-xs text-gray-400">
+                        I have experience in...
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="natural language processing, fraud detection, statistical modeling, and machine learning algorithms."
+                        value={state.experienceIn}
+                        onChange={(e) => {
+                          dispatch({
+                            type: "EXPERIENCE_IN",
+                            payload: e.target.value,
+                          });
+                        }}
+                        className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start px-3 py-1 w-full">
+                      <label htmlFor="" className="text-xs text-gray-400">
+                        I am excited about the job because...
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="this role will allow me to work on technically challenging problems and create impactful solutions while working with an innovative team."
+                        value={state.excitedAboutJobBecause}
+                        onChange={(e) => {
+                          dispatch({
+                            type: "EXCITED_ABOUT_JOB_BECAUSE",
+                            payload: e.target.value,
+                          });
+                        }}
+                        className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start px-3 py-1 w-full">
+                      <label htmlFor="" className="text-xs text-gray-400">
+                        I am passionate about...
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="solving problems at the intersection of technology and social good."
+                        value={state.passionateAbout}
+                        onChange={(e) => {
+                          dispatch({
+                            type: "PASSIONATE_ABOUT",
+                            payload: e.target.value,
+                          });
+                        }}
+                        className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="border border-blue-700 px-6 py-2 rounded transition ease-in-out delay-100 hover:bg-blue-700 hover:text-white"
+                    >
+                      Submit
+                    </button>
+                  </form>
+                )}
+              </div>
+            )
           ) : (
-            <div className="w-full lg:w-2/4 border border-slate-500 px-2 py-2 mx-2 my-2 rounded">
-              {state.renderResult ? (
-                <>
-                  <div className="px-4 py-2 mx-2 my-4 rounded text-justify">
-                    {state.openAIOutput.length > 0 ? state.openAIOutput : ""}
-                  </div>
-                  <button
-                    onClick={() =>
-                      dispatch({
-                        type: "TOGGLE_OUTPUT",
-                      })
-                    }
-                    className="border border-blue-700 px-6 py-2 rounded transition ease-in-out delay-100 hover:bg-blue-700 hover:text-white"
-                  >
-                    Start Over
-                  </button>
-                </>
-              ) : (
-                <form onSubmit={handleSubmit}>
-                  <div className="flex flex-col items-start px-3 py-1 w-full">
-                    <label htmlFor="" className="text-xs text-gray-400">
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Google"
-                      value={state.companyName}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "COMPANY_NAME",
-                          payload: e.target.value,
-                        });
-                      }}
-                      className="border px-1 py-1 my-1 rounded bg-slate-100 w-full text-sm"
-                    />
-                  </div>
-                  <div className="flex flex-col items-start px-3 py-1 w-full">
-                    <label htmlFor="" className="text-xs text-gray-400">
-                      What role you are applying for?
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Machine Learning Engineer"
-                      value={state.roleName}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "ROLE_NAME",
-                          payload: e.target.value,
-                        });
-                      }}
-                      className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
-                    />
-                  </div>
-                  <div className="flex flex-col items-start px-3 py-1 w-full">
-                    <label htmlFor="" className="text-xs text-gray-400">
-                      Who are you emailing?
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="John Cena"
-                      value={state.emailingTo}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "EMAILING_TO",
-                          payload: e.target.value,
-                        });
-                      }}
-                      className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
-                    />
-                  </div>
-                  <div className="flex flex-col items-start px-3 py-1 w-full">
-                    <label htmlFor="" className="text-xs text-gray-400">
-                      What is your name?
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Khushal Sharma"
-                      value={state.yourName}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "YOUR_NAME",
-                          payload: e.target.value,
-                        });
-                      }}
-                      className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
-                    />
-                  </div>
-                  <div className="flex flex-col items-start px-3 py-1 w-full">
-                    <label htmlFor="" className="text-xs text-gray-400">
-                      I have experience in...
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="natural language processing, fraud detection, statistical modeling, and machine learning algorithms."
-                      value={state.experienceIn}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "EXPERIENCE_IN",
-                          payload: e.target.value,
-                        });
-                      }}
-                      className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
-                    />
-                  </div>
-                  <div className="flex flex-col items-start px-3 py-1 w-full">
-                    <label htmlFor="" className="text-xs text-gray-400">
-                      I am excited about the job because...
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="this role will allow me to work on technically challenging problems and create impactful solutions while working with an innovative team."
-                      value={state.excitedAboutJobBecause}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "EXCITED_ABOUT_JOB_BECAUSE",
-                          payload: e.target.value,
-                        });
-                      }}
-                      className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
-                    />
-                  </div>
-                  <div className="flex flex-col items-start px-3 py-1 w-full">
-                    <label htmlFor="" className="text-xs text-gray-400">
-                      I am passionate about...
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="solving problems at the intersection of technology and social good."
-                      value={state.passionateAbout}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "PASSIONATE_ABOUT",
-                          payload: e.target.value,
-                        });
-                      }}
-                      className="border px-1 py-2 my-1 rounded bg-slate-100 w-full text-sm"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="border border-blue-700 px-6 py-2 rounded transition ease-in-out delay-100 hover:bg-blue-700 hover:text-white"
-                  >
-                    Submit
-                  </button>
-                </form>
-              )}
+            <div className="mt-6 w-full lg:w-2/5 bg-red-300 px-2 py-6 text-xl rounded">
+              <p>There is an error. Please try again later</p>
             </div>
           )}
         </main>
