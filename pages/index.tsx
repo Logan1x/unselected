@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useReducer, Fragment, useState } from "react";
+import { useReducer, Fragment, useState, useEffect } from "react";
 import type { NextPage } from "next";
 import { Configuration, OpenAIApi } from "openai";
 import { reducerFunc, initFunc } from "../reducers";
@@ -8,11 +8,22 @@ import { stat } from "fs";
 const Home: NextPage = () => {
   const [state, dispatch] = useReducer(reducerFunc, initFunc);
   const [btnText, setBtnText] = useState("Copy to Clipboard");
+  const [apiKey, setApiKey] = useState("");
+  const [config, setConfig]: any = useState();
+  const [apiKeyModal, setApiKeyModal] = useState(false);
 
-  const configuration = new Configuration({
-    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-  });
-  const openai = new OpenAIApi(configuration);
+  useEffect(() => {
+    if (localStorage.getItem("secret-key")?.length) {
+      const configuration = new Configuration({
+        apiKey: localStorage.getItem("secret-key") ?? "",
+      });
+      setConfig(configuration);
+    } else {
+      setApiKeyModal(true);
+    }
+  }, [apiKey]);
+
+  const openai = new OpenAIApi(config);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -65,6 +76,8 @@ const Home: NextPage = () => {
       });
     }
   };
+
+  useEffect(() => {}, []);
 
   return (
     <Fragment>
@@ -279,6 +292,37 @@ const Home: NextPage = () => {
           ) : (
             <div className="mt-6 w-full lg:w-2/5 bg-red-300 px-2 py-6 text-xl rounded">
               <p>There is an error. Please try again later</p>
+            </div>
+          )}
+          {apiKeyModal && (
+            <div className="fixed z-10 inset-0 overflow-y-auto flex items-center justify-center min-h-screen bg-slate-100 bg-opacity-50">
+              <div className="flex flex-col gap-1 min-w-1/4 h-18 bg-[#ffffff] shadow-md rounded p-2 border border-black">
+                <div>
+                  <p className="font-semibold text-base">
+                    Please enter your OpenAI api-key credential
+                  </p>
+                  <p className="text-xs text-gray">
+                    note: we don't save your sensitive credentials in our
+                    database
+                  </p>
+                </div>
+
+                <input
+                  type="password"
+                  className="w-full border border-slate-400 rounded px-3 py-1"
+                  placeholder="your OpenAI secret key"
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
+                <button
+                  className="bg-blue-600  w-fit rounded shadow text-white px-3 px-1 mx-auto"
+                  onClick={() => {
+                    localStorage.setItem("secret-key", apiKey);
+                    setApiKeyModal((modal) => !modal);
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
             </div>
           )}
         </main>
