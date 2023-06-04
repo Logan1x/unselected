@@ -295,42 +295,81 @@ const Home: NextPage = () => {
             </div>
           )}
           {apiKeyModal && (
-            <div className="fixed z-10 inset-0 overflow-y-auto flex items-center justify-center min-h-screen bg-slate-100 bg-opacity-50">
-              <div className="flex flex-col gap-1 min-w-1/4 h-18 bg-[#ffffff] shadow-md rounded p-2 border border-black">
-                <div>
-                  <p className="font-semibold text-base">
-                    Please enter your OpenAI api-key credential
-                  </p>
-                  <p className="text-xs text-gray">
-                    note: we don't save your sensitive credentials in our
-                    database
+            <div className="fixed z-10 inset-0 overflow-y-auto flex items-center justify-center min-h-screen bg-slate-50 bg-opacity-75 backdrop-blur-sm">
+              <div className="flex flex-col gap-1 w-2/5 h-18 bg-[#ffffff] shadow-lg rounded-md ">
+                <div className="text-left px-4 py-2 flex justify-between w-full items-center">
+                  <p className="font-semibold text-lg">Setup your API key</p>
+                  <p
+                    className="text-sm cursor-pointer text-red-500"
+                    onClick={() => setApiKeyModal(false)}
+                  >
+                    ❌
                   </p>
                 </div>
-
-                <input
-                  type="password"
-                  className="w-full border border-slate-400 rounded px-3 py-1"
-                  placeholder="your OpenAI secret key"
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <button
-                  className="bg-blue-600  w-fit rounded shadow text-white px-3 px-1 mx-auto"
-                  onClick={() => {
-                    localStorage.setItem("secret-key", apiKey);
-                    setApiKeyModal((modal) => !modal);
-                  }}
-                >
-                  Submit
-                </button>
+                <hr />
+                <div className="flex gap-1 items-center px-4">
+                  <label
+                    htmlFor=""
+                    className="text-sm w-20 font-bold text-slate-600
+                    "
+                  >
+                    API Key
+                  </label>
+                  <input
+                    type="password"
+                    className="mt-2 w-full border border-2 border-slate-400 text-sm rounded px-3 py-1 outline-none"
+                    placeholder="your OpenAI secret key"
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-3 text-left px-5 mt-2 text-sm text-justify text-slate-600">
+                  <p>
+                    Get your personal API key{" "}
+                    <a
+                      href="https://platform.openai.com/account/api-keys"
+                      className="underline"
+                    >
+                      here.
+                    </a>
+                  </p>
+                  <p className="mb-2">
+                    We prioritize the security of your API key and handle it
+                    with utmost care. Your key is exclusively stored on your
+                    browser and never shared with any third-party entity. It is
+                    solely used for the intended purpose of accessing the OpenAI
+                    API and not for any other unauthorized use.
+                  </p>
+                </div>
+                <hr />
+                <div className="px-4 py-2 w-fit mx-auto">
+                  <button
+                    className="bg-blue-600 rounded shadow text-white py-1 px-4"
+                    onClick={() => {
+                      localStorage.setItem("secret-key", apiKey);
+                      setApiKeyModal((modal) => !modal);
+                    }}
+                  >
+                    Submit
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </main>
 
         <footer className="flex h-16 w-full items-center justify-around border-t text-sm lg:text-lg">
-          <p>
+          <p className="flex gap-3">
             <span className="border-b-2 border-gray-700 hover:border-blue-600 hover:border-b-4 transition ease-in-out delay-100">
               <a href="/about">about</a>
+            </span>
+            <span className="border-b-2 border-gray-700 hover:border-blue-600 hover:border-b-4 transition ease-in-out delay-100">
+              <p
+                onClick={() => {
+                  setApiKeyModal(true);
+                }}
+              >
+                API
+              </p>
             </span>
           </p>
           <p>
