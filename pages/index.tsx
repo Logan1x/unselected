@@ -1,5 +1,14 @@
 import Head from "next/head";
-import { useReducer, Fragment, useState } from "react";
+import {
+  useReducer,
+  Fragment,
+  useState,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactFragment,
+  ReactPortal,
+} from "react";
 import type { NextPage } from "next";
 import { reducerFunc, initFunc } from "../reducers";
 
@@ -43,7 +52,20 @@ const Home: NextPage = () => {
 
       const prompt = data.content
         ?.split("\n")
-        .map((str, i) => <p key={i}>{str}</p>);
+        .map(
+          (
+            str:
+              | string
+              | number
+              | boolean
+              | ReactElement<any, string | JSXElementConstructor<any>>
+              | ReactFragment
+              | ReactPortal
+              | null
+              | undefined,
+            i: Key | null | undefined
+          ) => <p key={i}>{str}</p>
+        );
 
       dispatch({
         type: "OPENAI_OUTPUT_COPY2CLIPBOARD",
