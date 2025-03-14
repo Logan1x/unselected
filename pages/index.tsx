@@ -1,29 +1,18 @@
 import Head from "next/head";
 import { useReducer, Fragment, useState, useEffect } from "react";
 import type { NextPage } from "next";
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 import { reducerFunc, initFunc } from "../reducers";
-import { stat } from "fs";
 
 const Home: NextPage = () => {
   const [state, dispatch] = useReducer(reducerFunc, initFunc);
   const [btnText, setBtnText] = useState("Copy to Clipboard");
-  const [apiKey, setApiKey] = useState("");
-  const [config, setConfig]: any = useState();
-  const [apiKeyModal, setApiKeyModal] = useState(false);
 
-  useEffect(() => {
-    if (localStorage.getItem("secret-key")?.length) {
-      const configuration = new Configuration({
-        apiKey: localStorage.getItem("secret-key") ?? "",
-      });
-      setConfig(configuration);
-    } else {
-      setApiKeyModal(true);
-    }
-  }, [apiKey]);
-
-  const openai = new OpenAIApi(config);
+  const openai = new OpenAI({
+    baseURL: "https://api.deepseek.com",
+    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+    dangerouslyAllowBrowser: true,
+  });
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -38,24 +27,47 @@ const Home: NextPage = () => {
 
     const promptString = `Write a cover letter to ${state.emailingTo} from ${state.yourName} for a ${state.roleName} job at ${state.companyName}. I have experience in ${state.experienceIn} I am excited about the job because ${state.excitedAboutJobBecause} I am passionate about ${state.passionateAbout}`;
 
+    const systemPrompt = `You are a cover letter writing assistant. Generate professional, personalized cover letters using the provided information. Follow these guidelines:
+
+      1. Use proper business letter format with header, date, salutation, body, closing and signature.
+
+      2. Create a compelling opening that mentions the position and company.
+
+      3. Highlight relevant experience and skills that match the job requirements.
+
+      4. Include specific achievements when possible.
+
+      5. Authentically incorporate the applicant's passion and enthusiasm.
+
+      6. End with a confident closing that expresses interest in an interview.
+
+      7. Keep it concise (250-350 words) and error-free.
+
+      8. Personalize based on all provided variables (recipient, applicant name, role, company, experience, reasons for excitement, passions).
+
+      9. Maintain a professional tone while showcasing the applicant's unique qualities.
+
+      The letter should require no further editing and position the applicant as an excellent candidate.
+        `;
+
     try {
-      const op = await openai.createCompletion({
-        model: "text-davinci-002",
-        prompt: promptString,
-        temperature: 0.7,
-        max_tokens: 2080,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
+      const completion = await openai.chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: promptString },
+        ],
+        model: "deepseek-chat",
       });
 
-      const prompt = op.data.choices[0].text
+      console.log(completion.choices[0].message.content);
+
+      const prompt = completion.choices[0].message.content
         ?.split("\n")
         .map((str, i) => <p key={i}>{str}</p>);
 
       dispatch({
         type: "OPENAI_OUTPUT_COPY2CLIPBOARD",
-        payload: op.data.choices[0].text,
+        payload: completion.choices[0].message.content,
       });
 
       dispatch({
@@ -76,8 +88,6 @@ const Home: NextPage = () => {
       });
     }
   };
-
-  useEffect(() => {}, []);
 
   return (
     <Fragment>
@@ -294,82 +304,12 @@ const Home: NextPage = () => {
               <p>There is an error. Please try again later</p>
             </div>
           )}
-          {apiKeyModal && (
-            <div className="fixed z-10 inset-0 overflow-y-auto flex items-center justify-center min-h-screen bg-slate-50 bg-opacity-75 backdrop-blur-sm">
-              <div className="flex flex-col gap-1 w-2/5 h-18 bg-[#ffffff] shadow-lg rounded-md ">
-                <div className="text-left px-4 py-2 flex justify-between w-full items-center">
-                  <p className="font-semibold text-lg">Setup your API key</p>
-                  <p
-                    className="text-sm cursor-pointer text-red-500"
-                    onClick={() => setApiKeyModal(false)}
-                  >
-                    ❌
-                  </p>
-                </div>
-                <hr />
-                <div className="flex gap-1 items-center px-4">
-                  <label
-                    htmlFor=""
-                    className="text-sm w-20 font-bold text-slate-600
-                    "
-                  >
-                    API Key
-                  </label>
-                  <input
-                    type="password"
-                    className="mt-2 w-full border border-2 border-slate-400 text-sm rounded px-3 py-1 outline-none"
-                    placeholder="your OpenAI secret key"
-                    onChange={(e) => setApiKey(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-3 text-left px-5 mt-2 text-sm text-justify text-slate-600">
-                  <p>
-                    Get your personal API key{" "}
-                    <a
-                      href="https://platform.openai.com/account/api-keys"
-                      className="underline"
-                    >
-                      here.
-                    </a>
-                  </p>
-                  <p className="mb-2">
-                    We prioritize the security of your API key and handle it
-                    with utmost care. Your key is exclusively stored on your
-                    browser and never shared with any third-party entity. It is
-                    solely used for the intended purpose of accessing the OpenAI
-                    API and not for any other unauthorized use.
-                  </p>
-                </div>
-                <hr />
-                <div className="px-4 py-2 w-fit mx-auto">
-                  <button
-                    className="bg-blue-600 rounded shadow text-white py-1 px-4"
-                    onClick={() => {
-                      localStorage.setItem("secret-key", apiKey);
-                      setApiKeyModal((modal) => !modal);
-                    }}
-                  >
-                    Submit
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </main>
 
         <footer className="flex h-16 w-full items-center justify-around border-t text-sm lg:text-lg">
           <p className="flex gap-3">
             <span className="border-b-2 border-gray-700 hover:border-blue-600 hover:border-b-4 transition ease-in-out delay-100">
               <a href="/about">about</a>
-            </span>
-            <span className="border-b-2 border-gray-700 hover:border-blue-600 hover:border-b-4 transition ease-in-out delay-100">
-              <p
-                onClick={() => {
-                  setApiKeyModal(true);
-                }}
-              >
-                API
-              </p>
             </span>
           </p>
           <p>
