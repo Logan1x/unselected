@@ -1,18 +1,11 @@
 import Head from "next/head";
-import { useReducer, Fragment, useState, useEffect } from "react";
+import { useReducer, Fragment, useState } from "react";
 import type { NextPage } from "next";
-import OpenAI from "openai";
 import { reducerFunc, initFunc } from "../reducers";
 
 const Home: NextPage = () => {
   const [state, dispatch] = useReducer(reducerFunc, initFunc);
   const [btnText, setBtnText] = useState("Copy to Clipboard");
-
-  const openai = new OpenAI({
-    baseURL: "https://api.deepseek.com",
-    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-    dangerouslyAllowBrowser: true,
-  });
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -25,49 +18,36 @@ const Home: NextPage = () => {
     dispatch({ type: "OPENAI_OUTPUT_COPY2CLIPBOARD", payload: "" });
     setBtnText("Copy to Clipboard");
 
-    const promptString = `Write a cover letter to ${state.emailingTo} from ${state.yourName} for a ${state.roleName} job at ${state.companyName}. I have experience in ${state.experienceIn} I am excited about the job because ${state.excitedAboutJobBecause} I am passionate about ${state.passionateAbout}`;
-
-    const systemPrompt = `You are a cover letter writing assistant. Generate professional, personalized cover letters using the provided information. Follow these guidelines:
-
-      1. Use proper business letter format with header, date, salutation, body, closing and signature.
-
-      2. Create a compelling opening that mentions the position and company.
-
-      3. Highlight relevant experience and skills that match the job requirements.
-
-      4. Include specific achievements when possible.
-
-      5. Authentically incorporate the applicant's passion and enthusiasm.
-
-      6. End with a confident closing that expresses interest in an interview.
-
-      7. Keep it concise (250-350 words) and error-free.
-
-      8. Personalize based on all provided variables (recipient, applicant name, role, company, experience, reasons for excitement, passions).
-
-      9. Maintain a professional tone while showcasing the applicant's unique qualities.
-
-      The letter should require no further editing and position the applicant as an excellent candidate.
-        `;
-
     try {
-      const completion = await openai.chat.completions.create({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: promptString },
-        ],
-        model: "deepseek-chat",
+      const response = await fetch("/api/generate-cover-letter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailingTo: state.emailingTo,
+          yourName: state.yourName,
+          roleName: state.roleName,
+          companyName: state.companyName,
+          experienceIn: state.experienceIn,
+          excitedAboutJobBecause: state.excitedAboutJobBecause,
+          passionateAbout: state.passionateAbout,
+        }),
       });
 
-      console.log(completion.choices[0].message.content);
+      if (!response.ok) {
+        throw new Error("Failed to generate cover letter");
+      }
 
-      const prompt = completion.choices[0].message.content
+      const data = await response.json();
+
+      const prompt = data.content
         ?.split("\n")
         .map((str, i) => <p key={i}>{str}</p>);
 
       dispatch({
         type: "OPENAI_OUTPUT_COPY2CLIPBOARD",
-        payload: completion.choices[0].message.content,
+        payload: data.content,
       });
 
       dispatch({
